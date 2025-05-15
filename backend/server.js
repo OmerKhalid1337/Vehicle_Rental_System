@@ -412,6 +412,76 @@ app.post('/register', async (req, res) => {
 });
 
 // User login
+// app.post('/login', async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     // Validate required fields
+//     if (!email || !password) {
+//       return res.status(400).json({ error: 'Email and password are required' });
+//     }
+
+//     // Check if user exists
+//     const userResult = await pool.query(
+//       'SELECT *, password_hash = crypt($2,password_hash) as is_valid FROM users WHERE email = $1',
+//       [email,password]
+//     );
+
+//     if (userResult.rows.length === 0) {
+//       return res.status(401).json({ error: 'Invalid email or password' });
+//     }
+
+//     const user = userResult.rows[0];
+    
+//     // In a real application, you would verify the password hash here
+//     // For simplicity, we're just checking if the password matches directly
+//     // This is NOT secure for a production environment
+//     if (!user.is_valid) {
+//       return res.status(401).json({ error: 'Invalid email or password' });
+//     }
+
+//     // Get customer details if user is a customer
+//     let customerDetails = null;
+//     let adminDetails = null;
+//     let name = null;
+    
+//     if (user.role === 'Customer') {
+//       const customerResult = await pool.query(
+//         'SELECT * FROM customer WHERE user_id = $1',
+//         [user.user_id]
+//       );
+      
+//       if (customerResult.rows.length > 0) {
+//         customerDetails = customerResult.rows[0];
+//         name = customerDetails.name;
+//       }
+//     } else if (user.role === 'Admin') {
+//       const adminResult = await pool.query(
+//         'SELECT * FROM admin WHERE user_id = $1',
+//         [user.user_id]
+//       );
+      
+//       if (adminResult.rows.length > 0) {
+//         adminDetails = adminResult.rows[0];
+//         name = adminDetails.name;
+//       }
+//     }
+
+//     // Return user data
+//     res.json({
+//       user_id: user.user_id,
+//       email: user.email,
+//       role: user.role,
+//       customer_id: customerDetails ? customerDetails.customer_id : null,
+//       admin_id: adminDetails ? adminDetails.admin_id : null,
+//       name: name
+//     });
+//   } catch (error) {
+//     console.error('Error during login:', error);
+//     res.status(500).json({ error: 'Failed to authenticate user', details: error.message });
+//   }
+// });
+
 app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -423,8 +493,8 @@ app.post('/login', async (req, res) => {
 
     // Check if user exists
     const userResult = await pool.query(
-      'SELECT *, password_hash = crypt($2,password_hash) as is_valid FROM users WHERE email = $1',
-      [email,password]
+      'SELECT * FROM users WHERE email = $1',
+      [email]
     );
 
     if (userResult.rows.length === 0) {
@@ -436,7 +506,7 @@ app.post('/login', async (req, res) => {
     // In a real application, you would verify the password hash here
     // For simplicity, we're just checking if the password matches directly
     // This is NOT secure for a production environment
-    if (!user.is_valid) {
+    if (user.password_hash !== password) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -1988,4 +2058,3 @@ app.post('/vehicles', adminAuthMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Failed to create vehicle', details: error.message });
   }
 });
-
